@@ -1,0 +1,164 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define TAMANHO_HASH 10
+
+// Estrutura para representar um filme
+typedef struct Filme {
+    int id;               // ID único do filme
+    char genero[50];      // Gênero do filme
+    char data[50];        // Data de lançamento do filme
+    char temp_vis[20];    // Tempo de visualização do filme
+    char av_user[5];      // Avaliação do usuário
+    char nome[50];        // Nome do filme
+    struct Filme *proximo; // Ponteiro para o próximo filme (lista ligada)
+} Filme;
+
+// Estrutura da Tabela Hash
+typedef struct {
+    Filme *tabela[TAMANHO_HASH];  // Array de ponteiros para o início da lista ligada
+} TabelaHash;
+
+// Função Hash: Retorna o índice baseado no ID do filme
+int funcao_hash(int id) {
+    return id % TAMANHO_HASH;  // Usa módulo para determinar a posição na tabela
+}
+
+// Função para criar um novo filme
+Filme *criar_filme(int id, const char *genero, const char *data, const char *temp_vis, const char *av_user, const char *nome) {
+    Filme *novo_filme = (Filme *)malloc(sizeof(Filme));
+    if (novo_filme == NULL) {
+        printf("Erro ao alocar memória!\n");
+        exit(1);
+    }
+    novo_filme->id = id;
+    strcpy(novo_filme->genero, genero);
+    strcpy(novo_filme->data, data);
+    strcpy(novo_filme->temp_vis, temp_vis);
+    strcpy(novo_filme->av_user, av_user);
+    strcpy(novo_filme->nome, nome);
+    novo_filme->proximo = NULL;
+    return novo_filme;
+}
+
+// Função para inserir um filme na tabela hash (usando listas ligadas para colisões)
+void inserir(TabelaHash *tabela, Filme *filme) {
+    int indice = funcao_hash(filme->id);  // Calcula o índice baseado no ID
+    filme->proximo = tabela->tabela[indice];  // Insere no início da lista ligada
+    tabela->tabela[indice] = filme;
+}
+
+// Função para exibir todos os filmes
+void exibir_todos(TabelaHash *tabela) {
+    for (int i = 0; i < TAMANHO_HASH; i++) {
+        Filme *atual = tabela->tabela[i];
+        while (atual != NULL) {
+            printf("Filme ID: %d, Nome: %s, Gênero: %s, Data de Lançamento: %s, Tempo de Visualização: %s, Avaliação do Usuário: %s (Índice: %d)\n",
+                   atual->id, atual->nome, atual->genero, atual->data, atual->temp_vis, atual->av_user, i);
+            atual = atual->proximo;  // Avança para o próximo filme
+        }
+    }
+}
+
+// Função para buscar um filme na tabela hash pelo ID
+Filme *buscar(TabelaHash *tabela, int id) {
+    int indice = funcao_hash(id);  // Calcula o índice para busca
+    Filme *atual = tabela->tabela[indice];
+    
+    while (atual != NULL) {
+        if (atual->id == id) {
+            return atual;  // Retorna o filme se encontrado
+        }
+        atual = atual->proximo;  // Vai para o próximo filme na lista ligada
+    }
+    return NULL;  // Retorna NULL se não for encontrado
+}
+
+// Função para excluir um filme na tabela hash pelo ID
+void excluir(TabelaHash *tabela, int id) {
+    int indice = funcao_hash(id);  // Calcula o índice para exclusão
+    Filme *atual = tabela->tabela[indice];
+    Filme *anterior = NULL;
+
+    while (atual != NULL) {
+        if (atual->id == id) {
+            // Se o elemento a ser removido for o primeiro da lista
+            if (anterior == NULL) {
+                tabela->tabela[indice] = atual->proximo;  // Remove o primeiro elemento
+            } else {
+                anterior->proximo = atual->proximo;  // Remove o elemento no meio ou fim
+            }
+            free(atual);  // Libera a memória do filme
+            printf("Filme com ID %d foi excluído.\n", id);
+            return;
+        }
+        anterior = atual;
+        atual = atual->proximo;
+    }
+    printf("Filme com ID %d não encontrado para exclusão.\n", id);
+}
+
+// Função para contar o número total de elementos (filmes) na tabela hash
+int contar_elementos(TabelaHash *tabela) {
+    int total = 0;
+
+    // Percorre todas as posições da tabela hash
+    for (int i = 0; i < TAMANHO_HASH; i++) {
+        Filme *atual = tabela->tabela[i];
+
+        // Percorre a lista ligada em cada posição
+        while (atual != NULL) {
+            total++;  // Incrementa o contador para cada filme encontrado
+            atual = atual->proximo;  // Vai para o próximo elemento na lista
+        }
+    }
+
+    return total;
+}
+
+// Função para inserir filmes predefinidos na tabela hash
+void inserir_dados_predefinidos(TabelaHash *tabela) {
+    // Inserindo filmes diretamente
+    inserir(tabela, criar_filme(101, "Romance", "19/09/2024", "2:00", "4.5", "Sobre o Mesmo Céu"));
+    inserir(tabela, criar_filme(102, "Ação", "19/09/1998", "2:00", "5.0", "Duro de Matar"));
+    inserir(tabela, criar_filme(103, "Comédia", "29/11/1974", "2:00", "4.0", "Click"));
+    inserir(tabela, criar_filme(104, "Drama", "09/10/2013", "2:00", "4.5", "Brilho Eterno de uma Mente Sem Lembranças"));
+    inserir(tabela, criar_filme(105, "Ação", "13/11/2024", "2:00", "4.0", "John Wick"));
+    // Adicione mais filmes conforme necessário
+
+    printf("Filmes foram inseridos com sucesso.\n");
+}
+
+// Função principal para demonstrar o uso da tabela hash com filmes
+int main() {
+    // Inicializa a tabela hash
+    TabelaHash tabela = {NULL};
+
+    // Inserir os dados predefinidos na tabela hash
+    inserir_dados_predefinidos(&tabela);
+    
+    // Exibir todos os filmes inseridos
+    printf("\nTodos os filmes inseridos: %d\n", contar_elementos(&tabela));
+    exibir_todos(&tabela);
+
+    // Busca por um filme específico
+    printf("\nBuscar um Filme:\n");
+    Filme *f = buscar(&tabela, 102);
+    if (f != NULL) {
+        printf("Filme encontrado: ID: %d, Nome: %s, Gênero: %s, Data de Lançamento: %s, Tempo de Visualização: %s, Avaliação do Usuário: %s\n",
+               f->id, f->nome, f->genero, f->data, f->temp_vis, f->av_user);
+    } else {
+        printf("Filme não encontrado.\n");
+    }
+    
+    // Excluir um filme
+    printf("\nFilme excluído:\n");
+    excluir(&tabela, 105);
+    
+    // Exibir todos os filmes após a exclusão
+    printf("\nFilmes Atualizados: %d\n", contar_elementos(&tabela));
+    exibir_todos(&tabela);
+
+    return 0;
+}
