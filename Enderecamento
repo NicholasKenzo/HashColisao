@@ -139,7 +139,7 @@ void inserir_duplo_hashing(TabelaHash *tabela, Filme filme) {
     }
 }
 
-// Função para buscar um filme pelo ID
+// Função para buscar um filme pelo ID usando sondagem linear
 Filme* buscar_filme(TabelaHash *tabela, int id) {
     int indice = funcao_hash(id);
     int tentativas = 0;
@@ -155,7 +155,7 @@ Filme* buscar_filme(TabelaHash *tabela, int id) {
     return NULL;  // Retorna NULL se não encontrar o filme
 }
 
-// Função para remover um filme pelo ID
+// Função para remover um filme pelo ID usando sondagem linear
 int remover_filme(TabelaHash *tabela, int id) {
     int indice = funcao_hash(id);
     int tentativas = 0;
